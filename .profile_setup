@@ -1,0 +1,32 @@
+autoload -Uz compinit && compinit
+alias resetProfile="source /Users/clawrence/.zprofile"
+function openRepo()
+{
+    repoDir=~/repos
+    curDir=$(pwd)
+
+    cd $repoDir
+
+    if [[ -z $1 ]]; then
+        #git checkout <GITURL>
+    else
+        cd $1
+        #git pull
+    fi
+    code .
+    cd $curDir
+    
+}
+_openRepo_completions() {
+    local repoDir=~/repos
+    # Check if directory exists to avoid errors
+    if [[ -d "$repoDir" ]]; then
+        # -W specifies the parent directory to look into
+        # / is the suffix added to matches
+        _path_files -W "$repoDir" -/
+    fi
+}
+
+# Register for the openRepo command
+compdef _openRepo_completions openRepo
+
