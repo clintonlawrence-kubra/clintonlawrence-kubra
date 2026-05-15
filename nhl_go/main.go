@@ -4,8 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"nhl_go/models"
 	"strconv"
+
+	"nhl_go/models"
 )
 
 func main() {
@@ -38,7 +39,7 @@ func send_to_calendar(games map[string]map[string]any) {
 	for id, game := range games {
 		cal_data[id] = models.CalEvent{
 			ID:    id,
-			Title: game["home_team"].(string) + " vs " + game["away_team"].(string),
+			Title: game["home_team"].(string) + " vs " + game["away_team"].(string) + " at " + game["gameDate"].(string),
 		}
 	}
 
@@ -48,13 +49,12 @@ func send_to_calendar(games map[string]map[string]any) {
 
 func process_teams(json_data models.NHLSchedule) map[string]map[string]any {
 
-	game_data := make(map[string]any)
 	games := make(map[string]map[string]any)
 
 	for _, gameweek := range json_data.GameWeek {
 		game_date := gameweek.Date
 		for _, game := range gameweek.Games {
-
+			game_data := make(map[string]any)
 			game_data["home_team"] = game.HomeTeam.HomeTeamPlaceName.Default
 			game_data["away_team"] = game.AwayTeam.PlaceName.Default
 			game_data["gameDate"] = game_date
