@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+# Skip the secret scan when explicitly requested.
+if [[ "${SKIP_SECRET_SCAN:-}" == "1" ]]; then
+  exit 0
+fi
+
+repo_root=$(git rev-parse --show-toplevel)
+cd "$repo_root" || exit 1
+
+pattern='(password|passwd|secret|api_key|apikey|token|access_key|secret_key|private_key|BEGIN RSA PRIVATE KEY|BEGIN PRIVATE KEY|ssh-rsa|ssh-ed25519|ghp_|github_pat_|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)'
+
+files=$(git ls-files -z -- '*.sh' '*.bash' '*.zsh' '*.go' '*.py' '.env*' || true)
+if [[ -z "$files" ]]; then
+  exit 0
+fi
+
+if printf '%s' "$files" | xargs -0 grep -nE -- "$pattern"; then
+  echo
+  echo "ERROR: secret-like patterns were found in tracked files."
+  echo "Push blocked until these are removed or ignored."
+  echo "To bypass temporarily, use: SKIP_SECRET_SCAN=1 git push"
+  exit 1
+fi
+
+exit 0
