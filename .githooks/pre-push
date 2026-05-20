@@ -12,10 +12,10 @@ cd "$repo_root" || exit 1
 pattern='(password|passwd|secret|api_key|apikey|token|access_key|secret_key|private_key|BEGIN RSA PRIVATE KEY|BEGIN PRIVATE KEY|ssh-rsa|ssh-ed25519|ghp_|github_pat_|AWS_SECRET_ACCESS_KEY|AWS_ACCESS_KEY_ID)'
 
 if git ls-files -z -- '*.sh' '*.bash' '*.zsh' '*.go' '*.py' '.env*' | xargs -0 grep -nE -- "$pattern"; then
-  echo
-  echo "ERROR: secret-like patterns were found in tracked files."
-  echo "Push blocked until these are removed or ignored."
-  echo "To bypass temporarily, use: SKIP_SECRET_SCAN=1 git push"
+  echo >&2
+  echo >&2 "ERROR: secret-like patterns were found in tracked files."
+  echo >&2 "Push blocked until these are removed or ignored."
+  echo >&2 "To bypass temporarily, use: SKIP_SECRET_SCAN=1 git push"
   exit 1
 fi
 
