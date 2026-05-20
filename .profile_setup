@@ -51,3 +51,43 @@ _openRepo_completions() {
 # Register for the openRepo command
 compdef _openRepo_completions openRepo
 
+source <(kubectl completion zsh)
+
+
+
+function checkoutBranch() {
+    local branchName=$1
+    if [[ -z "$branchName" ]]; then
+        echo "Usage: checkoutBranch <branch-name>"
+        return 1
+    fi
+
+    git checkout $branchName
+    bail_on_fail $?
+    
+    local bailed=$?
+    
+    if [[ $bailed -ne 0 ]]; then
+        echo "Branch $branchName doesn't exist. Attempting to create"
+        git checkout -b $branchName
+        bail_on_fail $? && echo "Successfully created and checked out branch $branchName" || echo "Failed to create branch $branchName"
+    else
+        echo "Successfully checked out branch $branchName"
+        git pull
+        bail_on_fail $? && echo "Successfully pulled latest changes for branch $branchName" ||
+    fi
+}
+_checkoutBranch_completions() { 
+  # 1. Fetch all branches into a Zsh array
+  local branches=($(git branch --all --format='%(refname:short)' 2>/dev/null)) 
+  
+  # 2. Strip "origin/" from the front of any matching elements
+  branches=(${branches#origin/})
+  
+  # 3. Pass the cleaned array to compadd
+  compadd -a branches 
+} 
+
+
+# Register for the checkoutBranch command
+compdef _checkoutBranch_completions checkoutBranch
