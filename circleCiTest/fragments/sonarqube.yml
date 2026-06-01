@@ -1,0 +1,9 @@
+jobs:
+  create-sonarqube-project:
+    executor: go-executor
+    steps:
+      - setup-go-tools
+      - run:
+          name: Create SonarQube project from Port.io request
+          command: |
+            << GO COMMAND FOR CERATING SONAR PROJECT with pipeline.parameters passed in from PORT>>
