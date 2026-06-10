@@ -9,6 +9,16 @@ function bail_on_fail() {
     return 0
 }
 
+function copyCurrentBranchName() {
+    local branchName=$(git rev-parse --abbrev-ref HEAD 2>/dev/null)
+    if [[ -n "$branchName" ]]; then
+        echo -n "$branchName" | pbcopy
+        echo "Current branch name '$branchName' copied to clipboard."
+    else
+        echo "Not in a git repository or unable to determine branch name."
+    fi
+}
+
 function openRepo()
 {
     reposDir=~/repos

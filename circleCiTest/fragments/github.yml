@@ -1,9 +1,0 @@
-jobs:
-  create-github-repos:
-    executor: go-executor
-    steps:
-      - setup-go-tools
-      - run:
-          name: Create GitHub repositories from Port.io request
-          command: |
-            << GO COMMAND FOR CERATING GITHUB PROJECT with pipeline.parameters passed in from PORT>>s
