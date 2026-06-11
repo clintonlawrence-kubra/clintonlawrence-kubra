@@ -82,9 +82,6 @@ function checkoutBranch() {
         return 1
     fi
 
-    git checkout main #always get from main to ensure we have the latest changes before switching branches
-    git pull
-
     git checkout $branchName
     bail_on_fail $? return
     
@@ -92,6 +89,10 @@ function checkoutBranch() {
     
     if [[ $bailed -ne 0 ]]; then
         echo "Branch $branchName doesn't exist. Attempting to create"
+        
+        git checkout main #always get from main to ensure we have the latest changes before switching branches
+        git pull
+
         git checkout -b $branchName
         bail_on_fail $? exit 
         echo "Successfully created and checked out branch $branchName"
