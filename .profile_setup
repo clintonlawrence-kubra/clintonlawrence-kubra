@@ -6,6 +6,8 @@ function bail_on_fail() {
     if [ $1 -ne 0 ]; then
         echo "Error: Command failed with exit code $1 $2"
         if [[ "$shouldExit" == "exit" ]]; then
+            echo "Exiting due to failure...Press any key to continue."
+            read -n 1 -s
             exit 1
         elif [[ "$shouldExit" == "return" ]]; then
             return 1
@@ -73,6 +75,28 @@ compdef _openRepo_completions openRepo
 
 source <(kubectl completion zsh)
 
+function gitSquash() {
+    git reset --soft origin/develop
+}
+
+function gitRevertSquash() {
+    git reset 'HEAD@{1}'
+}
+
+function gitPushSquash() {
+    git push origin HEAD --force-with-lease
+}
+
+function gitResetBranch() {
+    git reset --hard origin/$(git rev-parse --abbrev-ref HEAD)
+}
+
+function gitCleanBranches() {
+    git remote prune origin
+    git fetch -p
+    git branch -vv | grep ': gone]' | awk '{print $1}' | xargs git branch -D
+}
+
 
 
 function checkoutBranch() {
@@ -90,7 +114,15 @@ function checkoutBranch() {
     if [[ $bailed -ne 0 ]]; then
         echo "Branch $branchName doesn't exist. Attempting to create"
         
-        git checkout main #always get from main to ensure we have the latest changes before switching branches
+        git checkout develop #always get from develop to ensure we have the latest changes before switching branches
+        checkoutStatus=$(bail_on_fail $? return)
+
+        if [[ $checkoutStatus -ne 0 ]]; then
+            echo "Failed to checkout develop branch. Trying main as fallback"
+            git checkout main
+            bail_on_fail $? exit
+        fi
+
         git pull
 
         git checkout -b $branchName
