@@ -46,6 +46,12 @@ function openRepo()
 
     if [[ $repoExists == "no" ]]; then
         gh repo clone kubra-hq/$1 $repoDir
+        #if not exist check iFactor owner        
+        if [[ $? -ne 0 ]]; then
+            echo "Failed to clone from kubra-hq. Attempting to clone from iFactor..."
+            gh repo clone iFactor/$1 $repoDir
+            bail_on_fail $? exit
+        fi
     else
         cd $repoDir
         git pull
@@ -95,6 +101,26 @@ function gitCleanBranches() {
     git remote prune origin
     git fetch -p
     git branch -vv | grep ': gone]' | awk '{print $1}' | xargs git branch -D
+}
+
+function gitRenameBranch() {
+    local newBranchName=$1
+    if [[ -z "$newBranchName" ]]; then
+        echo "Usage: gitRenameBranch <new-branch-name>"
+        return 1
+    fi
+
+    local currentBranch=$(git rev-parse --abbrev-ref HEAD)
+    
+    if [[ "$currentBranch" == "$newBranchName" ]]; then
+        echo "Current branch is already named $newBranchName"
+        return 0
+    fi
+
+    git branch -m $newBranchName
+    bail_on_fail $? exit
+    
+    echo "Successfully renamed branch to $newBranchName"
 }
 
 
