@@ -178,40 +178,6 @@ func generateJWT(issuer string, key *rsa.PrivateKey) (string, error) {
 	return signingInput + "." + enc.EncodeToString(sig), nil
 }
 
-func installationOwner(jwtToken, installationID string) (string, error) {
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s/app/installations/%s", githubAPI, installationID), nil)
-	if err != nil {
-		return "", err
-	}
-	req.Header.Set("Authorization", "Bearer "+jwtToken)
-	req.Header.Set("Accept", "application/vnd.github+json")
-	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
-
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return "", err
-	}
-	defer resp.Body.Close()
-
-	if resp.StatusCode != http.StatusOK {
-		body, _ := io.ReadAll(resp.Body)
-		return "", fmt.Errorf("%s: %s", resp.Status, strings.TrimSpace(string(body)))
-	}
-
-	var out struct {
-		Account struct {
-			Login string `json:"login"`
-		} `json:"account"`
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
-		return "", err
-	}
-	if out.Account.Login == "" {
-		return "", fmt.Errorf("no account login in installation response")
-	}
-	return out.Account.Login, nil
-}
-
 func installationToken(jwtToken, installationID string) (string, error) {
 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/app/installations/%s/access_tokens", githubAPI, installationID), nil)
 	if err != nil {
