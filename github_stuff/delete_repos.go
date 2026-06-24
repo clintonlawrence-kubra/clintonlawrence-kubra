@@ -91,7 +91,7 @@ func deleteRepo(repo string) error {
 // installationAuth mints (and caches) an installation access token from the
 // GitHub App credentials in the environment, returning the token and the owner
 // (login of the account the app is installed on).
-func installationAuth() (token string, err error) {
+func installationAuth() (installToken string, err error) {
 	if cachedToken != "" {
 		return cachedToken, nil
 	}
@@ -113,13 +113,13 @@ func installationAuth() (token string, err error) {
 		return "", fmt.Errorf("generate jwt: %w", err)
 	}
 
-	token, err = installationToken(jwtToken, installationID)
+	installToken, err = installationToken(jwtToken, installationID)
 	if err != nil {
 		return "", fmt.Errorf("create installation token: %w", err)
 	}
 
-	cachedToken = token
-	return token, nil
+	cachedToken = installToken
+	return installToken, nil
 }
 
 func parsePrivateKey(keyB64 string) (*rsa.PrivateKey, error) {
