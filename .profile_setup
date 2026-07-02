@@ -4,15 +4,17 @@ alias resetProfile="source /Users/clawrence/.zprofile"
 function bail_on_fail() {
     local shouldExit=$2
     if [ $1 -ne 0 ]; then
-        echo "Error: Command failed with exit code $1 $2"
+        echo "Error: Command failed with exit code $1 $2" >&2
         if [[ "$shouldExit" == "exit" ]]; then
-            echo "Exiting due to failure...Press any key to continue."
+            echo "Exiting due to failure...Press any key to continue." >&2
             read -n 1 -s
             exit 1
         elif [[ "$shouldExit" == "return" ]]; then
+            echo 1
             return 1
         fi
     fi
+    echo 0
     return 0
 }
 
@@ -50,7 +52,14 @@ function openRepo()
         if [[ $? -ne 0 ]]; then
             echo "Failed to clone from kubra-hq. Attempting to clone from iFactor..."
             gh repo clone iFactor/$1 $repoDir
-            bail_on_fail $? exit
+            if [[ $? -ne 0 ]]; then
+                echo "Failed to clone from both kubra-hq and iFactor. Attempting Clone from Kubra AWS Management..."
+                gh repo clone KUBRA-AWS-Management/$1 $repoDir
+                if [[ $? -ne 0 ]]; then
+                    echo "Failed to clone from Kubra AWS Management as well. Please check the repository name or your access permissions."
+                    return 1
+                fi
+            fi
         fi
     else
         cd $repoDir
@@ -142,7 +151,7 @@ function checkoutBranch() {
         
         git checkout develop #always get from develop to ensure we have the latest changes before switching branches
         checkoutStatus=$(bail_on_fail $? return)
-
+        echo develop checkout status: $checkoutStatus
         if [[ $checkoutStatus -ne 0 ]]; then
             echo "Failed to checkout develop branch. Trying main as fallback"
             git checkout main
