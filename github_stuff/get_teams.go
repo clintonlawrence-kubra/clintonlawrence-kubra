@@ -12,8 +12,9 @@ import (
 
 const githubTeamsAPI = "https://api.github.com"
 
-// githubToken is a personal access token with read:org scope (SSO-authorized
-// for the org if it enforces SAML SSO), read from the GITHUB_TOKEN env var.
+// githubToken holds a personal access credential with read:org scope
+// (SSO-authorized for the org if it enforces SAML SSO), read from the
+// GITHUB_TOKEN environment variable.
 var githubToken = os.Getenv("GITHUB_TOKEN")
 
 func main() {
@@ -45,8 +46,8 @@ type Team struct {
 // listTeams fetches every team in the org. GitHub returns child teams inline
 // in this same paginated list, distinguished only by their "parent" field.
 func listTeams(org string) ([]*Team, error) {
-	if githubToken == "" || githubToken == "PASTE_TOKEN_HERE" {
-		return nil, fmt.Errorf("set githubToken in get_teams.go to a personal access token first")
+	if githubToken == "" {
+		return nil, fmt.Errorf("set the GITHUB_TOKEN environment variable before running this command")
 	}
 
 	var all []*Team

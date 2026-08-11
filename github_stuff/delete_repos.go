@@ -55,12 +55,12 @@
 
 // }
 
-// // cached installation token + owner, reused across deleteRepo calls
+// // cached installation Token + owner, reused across deleteRepo calls
 // var cachedToken string
 
 // func deleteRepo(repo string) error {
 
-// 	token, err := installationAuth()
+// 	Token, err := installationAuth()
 // 	if err != nil {
 // 		return err
 // 	}
@@ -71,7 +71,7 @@
 // 	if err != nil {
 // 		return err
 // 	}
-// 	req.Header.Set("Authorization", "Bearer "+token)
+// 	req.Header.Set("Authorization", "Bearer "+Token)
 // 	req.Header.Set("Accept", "application/vnd.github+json")
 // 	req.Header.Set("X-GitHub-Api-Version", "2022-11-28")
 
@@ -88,8 +88,8 @@
 // 	return nil
 // }
 
-// // installationAuth mints (and caches) an installation access token from the
-// // GitHub App credentials in the environment, returning the token and the owner
+// // installationAuth mints (and caches) an installation access Token from the
+// // GitHub App credentials in the environment, returning the Token and the owner
 // // (login of the account the app is installed on).
 // func installationAuth() (installToken string, err error) {
 // 	if cachedToken != "" {
@@ -115,7 +115,7 @@
 
 // 	installToken, err = installationToken(jwtToken, installationID)
 // 	if err != nil {
-// 		return "", fmt.Errorf("create installation token: %w", err)
+// 		return "", fmt.Errorf("create installation Token: %w", err)
 // 	}
 
 // 	cachedToken = installToken
@@ -179,7 +179,7 @@
 // }
 
 // func installationToken(jwtToken, installationID string) (string, error) {
-// 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/app/installations/%s/access_tokens", githubAPI, installationID), nil)
+// 	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s/app/installations/%s/access_Tokens", githubAPI, installationID), nil)
 // 	if err != nil {
 // 		return "", err
 // 	}
@@ -199,13 +199,13 @@
 // 	}
 
 // 	var out struct {
-// 		Token string `json:"token"`
+// 		Token string `json:"Token"`
 // 	}
 // 	if err := json.NewDecoder(resp.Body).Decode(&out); err != nil {
 // 		return "", err
 // 	}
 // 	if out.Token == "" {
-// 		return "", fmt.Errorf("no token in access_tokens response")
+// 		return "", fmt.Errorf("no Token in access_Tokens response")
 // 	}
 // 	return out.Token, nil
 // }
