@@ -1,5 +1,7 @@
 autoload -Uz compinit && compinit
 alias resetProfile="source /Users/clawrence/.zprofile"
+alias docker="podman"
+alias shutItDown="bash /Users/clawrence/repos/mystuff/shutdown/shutdown.sh"
 
 function bail_on_fail() {
     local shouldExit=$2
@@ -64,6 +66,19 @@ function openRepo()
     else
         cd $repoDir
         git pull
+        #Branch no longer exists so need to checkout develop or main
+        if [[ $? -ne 0 ]]; then
+            echo "Failed to pull latest changes. Attempting to checkout develop branch..."
+            git checkout develop
+            if [[ $? -ne 0 ]]; then
+                echo "Failed to checkout develop branch. Attempting to checkout main branch..."
+                git checkout main
+                if [[ $? -ne 0 ]]; then
+                    echo "Failed to checkout both develop and main branches. Please check the repository state."
+                    return 1
+                fi
+            fi
+        fi  
     fi
     
     bail_on_fail $? exit

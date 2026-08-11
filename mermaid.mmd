@@ -1,0 +1,16 @@
+flowchart TD
+    A["Test starts<br/>playwright/tests/port-action.spec.ts<br/>test('Trigger scaffold pipeline Port action')"] --> B["Load action config<br/>playwright/inputs/scaffold-pipeline.ts<br/>scaffoldPipelineAction"]
+    B --> C["Get Port access token<br/>playwright/utils/port-auth.ts<br/>getPortAccessToken(request)"]
+    C --> D["Trigger Port action<br/>playwright/utils/port-auth.ts<br/>triggerAction(request, token, actionId, parameters)"]
+    D --> E{"HTTP 202 Accepted?"}
+    E -- No --> F["Fail test<br/>playwright/tests/port-action.spec.ts"]
+    E -- Yes --> G["Read run ID from response<br/>playwright/tests/port-action.spec.ts"]
+    G --> H["Poll run status<br/>playwright/utils/port-auth.ts<br/>getActionRunStatus(request, token, runId, actionId)"]
+    H --> I{"Status terminal?"}
+    I -- No, retry every 5s --> H
+    I -- Yes --> J{"Status == SUCCESS?"}
+    J -- No --> K["Fail test<br/>playwright/tests/port-action.spec.ts"]
+    J -- Yes --> L["Pass test<br/>playwright/tests/port-action.spec.ts"]
+
+    L --> M["afterEach summary log<br/>playwright/tests/port-action.spec.ts<br/>test.afterEach(...)"]
+    K --> M
