@@ -1,0 +1,7 @@
+{{ .Release.Name }} has been deployed.
+
+Service: {{ include "mychart.fullname" . }}
+Port:    {{ .Values.service.port }}
+
+Check status with:
+  kubectl get pods -l app={{ .Release.Name }}

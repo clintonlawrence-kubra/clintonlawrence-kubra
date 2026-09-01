@@ -3,6 +3,7 @@ alias resetProfile="source /Users/clawrence/.zprofile"
 alias docker="podman"
 alias shutItDown="bash /Users/clawrence/repos/mystuff/shutdown/shutdown.sh"
 
+
 function bail_on_fail() {
     local shouldExit=$2
     if [ $1 -ne 0 ]; then
@@ -34,7 +35,7 @@ function mergeBranch(){
     mergeBranchName=$1
     if [[ -z "$mergeBranchName" ]]; then
         echo "Usage: mergeBranch <branch-name>"
-        return 1
+        bail_on_fail 1 exit
     fi
     git merge $mergeBranchName
     bail_on_fail $? exit
@@ -58,8 +59,12 @@ function openRepo()
                 echo "Failed to clone from both kubra-hq and iFactor. Attempting Clone from Kubra AWS Management..."
                 gh repo clone KUBRA-AWS-Management/$1 $repoDir
                 if [[ $? -ne 0 ]]; then
-                    echo "Failed to clone from Kubra AWS Management as well. Please check the repository name or your access permissions."
-                    return 1
+                    echo "Failed to clone from Kubra AWS Management as well.  Attempting Clone from kubra-shared-services..."
+                    gh repo clone kubra-shared-services/$1 $repoDir
+                    if [[ $? -ne 0 ]]; then
+                        echo "Failed to clone from kubra-shared-services as well. Please check the repository name or your access permissions."
+                        bail_on_fail 1 exit
+                    fi
                 fi
             fi
         fi
@@ -74,8 +79,12 @@ function openRepo()
                 echo "Failed to checkout develop branch. Attempting to checkout main branch..."
                 git checkout main
                 if [[ $? -ne 0 ]]; then
-                    echo "Failed to checkout both develop and main branches. Please check the repository state."
-                    return 1
+                    echo "Failed to checkout both develop and main branches. Attempting to checkout master branch..."
+                    git checkout master
+                    if [[ $? -ne 0 ]]; then
+                        echo "Failed to checkout any trunk branch. Please check the repository state."
+                        bail_on_fail 1 exit
+                    fi
                 fi
             fi
         fi  
@@ -131,7 +140,7 @@ function gitRenameBranch() {
     local newBranchName=$1
     if [[ -z "$newBranchName" ]]; then
         echo "Usage: gitRenameBranch <new-branch-name>"
-        return 1
+        bail_on_fail 1 exit
     fi
 
     local currentBranch=$(git rev-parse --abbrev-ref HEAD)
@@ -147,31 +156,80 @@ function gitRenameBranch() {
     echo "Successfully renamed branch to $newBranchName"
 }
 
+function generateSSHKey() {
+
+    which ssh-keygen
+
+    local name="${1:-id_ed25519}"
+    local path="$HOME/.ssh/$name"
+    local email="clinton.lawrence@kubra.com"
+    
+    [[ -f "$path" ]] && echo "❌ Key '$name' already exists." && return 1
+    
+    /usr/bin/ssh-keygen -t ed25519 -f "$path" -C "$email" -N "" -q && \
+    echo "✅ Created: $path" && \
+    /bin/cat "${path}.pub"
+}
+
+# Clear-cut Homebrew JDK Switcher for your custom profile setup
+jdk() {
+    if [ -z "$1" ]; then
+        echo "Current Java version:"
+        java -version
+        echo "\nAvailable Homebrew OpenJDKs:"
+        ls -d /opt/homebrew/opt/openjdk* 2>/dev/null | awk -F'/' '{print $NF}'
+    else
+        # Determine target path directly from Homebrew's cellars
+        local target_path=""
+        if [ "$1" = "latest" ] || [ "$1" = "26" ]; then
+            # Handles default 'openjdk' installation (which is your version 26)
+            target_path="/opt/homebrew/opt/openjdk/libexec/openjdk.jdk/Contents/Home"
+        else
+            # Handles explicitly versioned cellars (like openjdk@25)
+            target_path="/opt/homebrew/opt/openjdk@$1/libexec/openjdk.jdk/Contents/Home"
+        fi
+
+        # Check if the folder physically exists before trying to switch
+        if [ -d "$target_path" ]; then
+            export JAVA_HOME="$target_path"
+            
+            # Clean any old JDK paths from your active PATH variable
+            PATH=$(echo "$PATH" | tr ':' '\n' | grep -v 'opt/openjdk' | tr '\n' ':' | sed 's/:$//')
+            
+            # Prepend the true, absolute binary track to the absolute front of PATH
+            export PATH="$JAVA_HOME/bin:$PATH"
+            
+            echo "Switched to Java $1"
+            java -version
+        else
+            echo "Error: Homebrew OpenJDK version '$1' not found at:"
+            echo " -> $target_path"
+        fi
+    fi
+}
+
+
+
+
 
 
 function checkoutBranch() {
     local branchName=$1
     if [[ -z "$branchName" ]]; then
         echo "Usage: checkoutBranch <branch-name>"
-        return 1
+        bail_on_fail 1 exit
     fi
 
     git checkout $branchName
-    bail_on_fail $? return
-    
-    local bailed=$?
-    
+    local bailed=$(bail_on_fail $? return)
+
     if [[ $bailed -ne 0 ]]; then
+        defaultBranch=$(git symbolic-ref refs/remotes/origin/HEAD | sed 's@^refs/remotes/origin/@@')
         echo "Branch $branchName doesn't exist. Attempting to create"
         
-        git checkout develop #always get from develop to ensure we have the latest changes before switching branches
+        git checkout $defaultBranch #always get from default to ensure we have the latest changes before switching branches
         checkoutStatus=$(bail_on_fail $? return)
-        echo develop checkout status: $checkoutStatus
-        if [[ $checkoutStatus -ne 0 ]]; then
-            echo "Failed to checkout develop branch. Trying main as fallback"
-            git checkout main
-            bail_on_fail $? exit
-        fi
+        echo $defaultBranch checkout status: $checkoutStatus
 
         git pull
 

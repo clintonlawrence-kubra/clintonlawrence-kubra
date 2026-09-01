@@ -10,6 +10,8 @@ APPS=(
   "Gmail"
   "Microsoft Teams"
   "TextMate"
+  "StrongDM"
+  "Claude"
 )
 
 for app in "${APPS[@]}"; do
@@ -20,6 +22,7 @@ for app in "${APPS[@]}"; do
 done
 
 # give apps a chance to actually exit
+echo "Waiting for apps to quit..."
 sleep 5
 
 # force-quit anything still open so a stray dialog can't block shutdown

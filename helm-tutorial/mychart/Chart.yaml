@@ -1,0 +1,6 @@
+apiVersion: v2
+name: mychart
+description: A minimal Helm chart used for the tutorial in helm-tutorial/
+type: application
+version: 0.1.0
+appVersion: "1.0.0"
